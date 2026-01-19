@@ -269,124 +269,49 @@ class _CupertinoModalTransition extends StatelessWidget {
       curve: animationCurve ?? Curves.easeOut,
     );
 
-    return AnnotatedRegion(
-      // Make sure to match the system UI overlay style to the background color
-      // we insert below. Since all other content is pushed down, the background
-      // color will always be the one visible behind the status bar.
-      value: overlayStyleFromColor(backgroundColor),
-      child: Stack(
-        children: [
-          Positioned.fill(child: ColoredBox(color: backgroundColor)),
-          AnimatedBuilder(
-            animation: curvedAnimation,
-            child: CupertinoUserInterfaceLevel(
-              data: CupertinoUserInterfaceLevelData.base,
-              child: body,
-            ),
-            builder: (context, child) {
-              final progress = curvedAnimation.value;
-              final yOffset = progress * paddingTop;
-              final scale = 1 - progress / 10;
-              final radius = progress == 0
-                  ? 0.0
-                  : (1 - progress) * startRoundCorner + progress * topRadius.x;
-              return Transform.translate(
-                offset: Offset(0, yOffset),
-                child: Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topCenter,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(radius),
-                    child: CupertinoUserInterfaceLevel(
-                      data: CupertinoUserInterfaceLevelData.elevated,
-                      child: Builder(
-                        builder: (context) => CupertinoTheme(
-                          data: createPreviousRouteTheme(
-                            context,
-                            curvedAnimation,
+    return AnimatedBuilder(
+      animation: curvedAnimation,
+      child: CupertinoUserInterfaceLevel(
+        data: CupertinoUserInterfaceLevelData.base,
+        child: body,
+      ),
+      builder: (context, child) {
+        final progress = curvedAnimation.value;
+        final yOffset = progress * paddingTop;
+        final scale = 1 - progress / 10;
+        final radius = progress == 0
+            ? 0.0
+            : (1 - progress) * startRoundCorner + progress * topRadius.x;
+
+        return Stack(
+          children: [
+            Container(color: backgroundColor),
+            Transform.translate(
+              offset: Offset(0, yOffset),
+              child: Transform.scale(
+                scale: scale,
+                alignment: Alignment.topCenter,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(radius),
+                  child: Stack(
+                    children: [
+                      child!,
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Container(
+                            color: Colors.black.withAlpha((progress * 12).toInt()),
                           ),
-                          child: child!,
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-        ],
-      ),
+              ),
+            ),
+          ],
+        );
+      },
     );
-  }
-
-  CupertinoThemeData createPreviousRouteTheme(
-    BuildContext context,
-    Animation<double> animation,
-  ) {
-    final cTheme = CupertinoTheme.of(context);
-
-    final systemBackground = CupertinoDynamicColor.resolve(
-      cTheme.scaffoldBackgroundColor,
-      context,
-    );
-
-    final barBackgroundColor = CupertinoDynamicColor.resolve(
-      cTheme.barBackgroundColor,
-      context,
-    );
-
-    var previousRouteTheme = cTheme;
-
-    if (cTheme.scaffoldBackgroundColor is CupertinoDynamicColor) {
-      final dynamicScaffoldBackgroundColor =
-          cTheme.scaffoldBackgroundColor as CupertinoDynamicColor;
-
-      /// BackgroundColor for the previous route with forced using
-      /// of the elevated colors
-      final elevatedScaffoldBackgroundColor =
-          CupertinoDynamicColor.withBrightnessAndContrast(
-        color: dynamicScaffoldBackgroundColor.elevatedColor,
-        darkColor: dynamicScaffoldBackgroundColor.darkElevatedColor,
-        highContrastColor:
-            dynamicScaffoldBackgroundColor.highContrastElevatedColor,
-        darkHighContrastColor:
-            dynamicScaffoldBackgroundColor.darkHighContrastElevatedColor,
-      );
-
-      previousRouteTheme = previousRouteTheme.copyWith(
-        scaffoldBackgroundColor: ColorTween(
-          begin: systemBackground,
-          end: elevatedScaffoldBackgroundColor.resolveFrom(context),
-        ).evaluate(animation),
-        primaryColor: CupertinoColors.placeholderText.resolveFrom(context),
-      );
-    }
-
-    if (cTheme.barBackgroundColor is CupertinoDynamicColor) {
-      final dynamicBarBackgroundColor =
-          cTheme.barBackgroundColor as CupertinoDynamicColor;
-
-      /// NavigationBarColor for the previous route with forced using
-      /// of the elevated colors
-      final elevatedBarBackgroundColor =
-          CupertinoDynamicColor.withBrightnessAndContrast(
-        color: dynamicBarBackgroundColor.elevatedColor,
-        darkColor: dynamicBarBackgroundColor.darkElevatedColor,
-        highContrastColor: dynamicBarBackgroundColor.highContrastElevatedColor,
-        darkHighContrastColor:
-            dynamicBarBackgroundColor.darkHighContrastElevatedColor,
-      );
-
-      previousRouteTheme = previousRouteTheme.copyWith(
-        barBackgroundColor: ColorTween(
-          begin: barBackgroundColor,
-          end: elevatedBarBackgroundColor.resolveFrom(context),
-        ).evaluate(animation),
-        primaryColor: CupertinoColors.placeholderText.resolveFrom(context),
-      );
-    }
-
-    return previousRouteTheme;
   }
 }
 
